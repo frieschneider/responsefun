@@ -68,7 +68,8 @@ available_operators = [
         name="electric_dipole_velocity",
         symbol="mu_p",
         symmetry=Symmetry.ANTIHERMITIAN,
-        dim=1
+        dim=1,
+        is_imag=True,
     ),
     Operator(
         name="magnetic_dipole",
@@ -81,13 +82,15 @@ available_operators = [
         name="electric_quadrupole",
         symbol="q",
         symmetry=Symmetry.HERMITIAN,
-        dim=2
+        dim=2,
+        is_imag=False,
     ),
     Operator(
         name="electric_quadrupole_velocity",
         symbol="q_p",
         symmetry=Symmetry.ANTIHERMITIAN,
-        dim=2
+        dim=2,
+        is_imag=True,
     ),
     Operator(
         name="diamagnetic_magnetizability",
@@ -177,7 +180,7 @@ def compute_ground_state_moment(state, integrals, pm_level,
     for c in components:
         ref_mom[c] = product_trace(integrals[c], state.ground_state.reference_state.density)
 
-    if pm_level == 1:
+    if pm_level in [0, 1]:
         gs_mom = ref_mom
     elif pm_level == 2:
         mp2corr = np.zeros(op_shape)
@@ -199,7 +202,7 @@ class AdccProperties(ABC):
     from adcc for a given operator."""
 
     def __init__(self, state: Union[adcc.ExcitedStates, MockExcitedStates],
-                 gauge_origin: Union[str, tuple[float, float, float]] = "origin"):
+                 gauge_origin: Union[str, tuple[float, float, float]] = "mass_center"):
         self._state = state
         self._state_size = len(state.excitation_energy_uncorrected)
         self._property_method = self._state.property_method
