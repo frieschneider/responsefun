@@ -202,7 +202,7 @@ class AdccProperties(ABC):
     from adcc for a given operator."""
 
     def __init__(self, state: Union[adcc.ExcitedStates, MockExcitedStates],
-                 gauge_origin: Union[str, tuple[float, float, float]] = "mass_center"):
+                 gauge_origin: Union[str, tuple[float, float, float]] = "origin"):
         self._state = state
         self._state_size = len(state.excitation_energy_uncorrected)
         self._property_method = self._state.property_method
