@@ -304,7 +304,7 @@ def determine_rvecs(rvecs_dict_list, input_subs, adcc_prop,
                 rhs = adcop.modified_transition_moments()
                 if key[3] == 0.0:
                     for c in components:
-                        # list indices must be integers (1-D operators)
+                        # # list indices must be integers (1-D operators)
                         c = c[0] if len(c) == 1 else c
                         response[c] = solve_response(
                             matrix, rhs[c], -key[2], gamma=0.0, projection=projection, **solver_args
@@ -457,6 +457,7 @@ def evaluate_property_isr(
     omegas=None,
     gamma_val=None,
     final_state=None,
+    gauge_origin="origin",
     **solver_args,
 ):
     """Compute a molecular property with the ADC/ISR approach from its SOS expression.
@@ -603,7 +604,7 @@ def evaluate_property_isr(
     # store adcc properties for the required operators in a dict
     adcc_prop = {}
     for op_type in sos.operator_types:
-        adcc_prop[op_type] = build_adcc_properties(state, op_type)
+        adcc_prop[op_type] = build_adcc_properties(state, op_type, gauge_origin=gauge_origin)
 
     rvecs_dict_tot, rvecs_solution, rvecs_mapping = determine_rvecs(
         rvecs_dict_list, input_subs, adcc_prop, state, projection, **solver_args
@@ -756,6 +757,7 @@ def evaluate_property_sos(
     omegas=None,
     gamma_val=None,
     final_state=None,
+    gauge_origin="origin",
 ):
     """Compute a molecular property from its SOS expression.
 
@@ -924,7 +926,7 @@ def evaluate_property_sos(
     # store adcc properties for the required operators in a dict
     adcc_prop = {}
     for op_type in sos.operator_types:
-        adcc_prop[op_type] = build_adcc_properties(state, op_type)
+        adcc_prop[op_type] = build_adcc_properties(state, op_type, gauge_origin=gauge_origin)
 
     print(f"Summing over {len(state.excitation_energy_uncorrected)} excited states ...")
     for term_dict in tqdm(term_list):
@@ -1009,6 +1011,7 @@ def evaluate_property_sos_fast(
     omegas=None,
     gamma_val=None,
     final_state=None,
+    gauge_origin="origin",
 ):
     """Compute a molecular property from its SOS expression using the Einstein summation convention.
 
@@ -1152,7 +1155,7 @@ def evaluate_property_sos_fast(
     # store adcc properties for the required operators in a dict
     adcc_prop = {}
     for op_type in sos.operator_types:
-        adcc_prop[op_type] = build_adcc_properties(state, op_type)
+        adcc_prop[op_type] = build_adcc_properties(state, op_type, gauge_origin=gauge_origin)
 
     for it, term in enumerate(term_list):
         einsum_list = []
@@ -1291,6 +1294,7 @@ def evaluate_property_sos_fast(
             f"Created string of subscript labels that is used by np.einsum for term {it+1}:\n",
             einsum_string,
         )
+        print(array_list[-1].shape)
         res_tens += factor * np.einsum(einsum_string, *array_list)
 
     print("========== The requested tensor was formed. ==========")
