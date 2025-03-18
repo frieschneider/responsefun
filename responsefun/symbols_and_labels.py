@@ -37,13 +37,6 @@ mup_c = OneParticleOperator("C", "electric_dipole_velocity", False)
 mup_d = OneParticleOperator("D", "electric_dipole_velocity", False)
 mup_e = OneParticleOperator("E", "electric_dipole_velocity", False)
 
-# electric dipole operators in velocity gauge
-op_vel_a = OneParticleOperator("A", "electric_dipole_velocity", False)
-op_vel_b = OneParticleOperator("B", "electric_dipole_velocity", False)
-op_vel_c = OneParticleOperator("C", "electric_dipole_velocity", False)
-op_vel_d = OneParticleOperator("D", "electric_dipole_velocity", False)
-op_vel_e = OneParticleOperator("E", "electric_dipole_velocity", False)
-
 # magnetic dipole operators
 m_a = OneParticleOperator("A", "magnetic_dipole", False)
 m_b = OneParticleOperator("B", "magnetic_dipole", False)
