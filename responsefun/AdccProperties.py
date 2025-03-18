@@ -202,7 +202,7 @@ class AdccProperties(ABC):
     from adcc for a given operator."""
 
     def __init__(self, state: Union[adcc.ExcitedStates, MockExcitedStates],
-                 gauge_origin: Union[str, tuple[float, float, float]] = "mass_center"):
+                 gauge_origin: Union[str, tuple[float, float, float]] = "origin"):
         self._state = state
         self._state_size = len(state.excitation_energy_uncorrected)
         self._property_method = self._state.property_method
@@ -420,9 +420,7 @@ class MagneticDipole(AdccProperties):
         if isinstance(self._state, MockExcitedStates):
             raise NotImplementedError
         else:
-            # Remove if adcc/PR#190 is merged
-            integrals = -1.0 * self.integrals
-            return compute_ground_state_moment(self._state, integrals, self._pm_level)
+            return compute_ground_state_moment(self._state, self.integrals, self._pm_level)
 
     def _transition_moment(self) -> np.ndarray:
         if isinstance(self._state, MockExcitedStates):
@@ -478,19 +476,13 @@ class ElectricQuadrupole(AdccProperties):
 
     @property
     def gs_moment(self) -> np.ndarray:
-        if isinstance(self._state, MockExcitedStates):
-            return NotImplementedError
-        else:
-            nuclear_contribution = np.zeros((3,3))
-            nuc_electric_quadrupole = self._state.reference_state.\
-                nuclear_quadrupole(self._gauge_origin)
-            nuclear_contribution[np.triu_indices(3)] = nuc_electric_quadrupole
-            nuclear_contribution = nuclear_contribution + nuclear_contribution.T \
-                - np.diag(nuclear_contribution)
-            # Remove if adcc/PR#190 is merged
-            integrals = -1.0 * self.integrals
-            return compute_ground_state_moment(self._state, integrals, self._pm_level,
-                                               nuclear_contribution=nuclear_contribution)
+        nuclear_contribution = np.zeros((3,3))
+        nuc_electric_quadrupole = self._state.reference_state.nuclear_quadrupole(self._gauge_origin)
+        nuclear_contribution[np.triu_indices(3)] = nuc_electric_quadrupole
+        nuclear_contribution = nuclear_contribution + nuclear_contribution.T \
+            - np.diag(nuclear_contribution)
+        return compute_ground_state_moment(self._state, self.integrals, self._pm_level,
+                                           nuclear_contribution=nuclear_contribution)
 
 
     def _transition_moment(self) -> np.ndarray:
