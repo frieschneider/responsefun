@@ -167,11 +167,7 @@ def _initialize_arguments(
         assert isinstance(freqs_out, list)
 
     external_freqs += freqs_in
-    for freq in freqs_out:
-        if freq not in freqs_in:
-            external_freqs.append(freq)
-    if len(external_freqs) != len(set([freq[0] for freq in external_freqs])):
-        raise ValueError("Every external frequency should only be specified once.")
+    external_freqs += freqs_out
 
     if damping is None:
         damping = 0.0
@@ -228,6 +224,15 @@ def _initialize_sos(
         "The following SOS expression was entered/generated. "
         f"It consists of {sos.number_of_terms} term(s):\n{sos}\n"
     )
+    # check whether the definitions match if frequencies are defined twice
+    for freq in external_freqs:
+        if sos.correlation_btw_freq:
+            same_freq = [sympify(f[1]).subs(sos.correlation_btw_freq) 
+                         for f in external_freqs
+                         if f[0] == freq[0]]
+        else:
+            same_freq = [f[1] for f in external_freqs if f[0] == freq[0]]
+        assert len(set(same_freq)) == 1
 
     all_freqs = external_freqs.copy()
     if excited_state is not None:
@@ -252,7 +257,7 @@ def _initialize_sos(
 
     all_freqs = all_freqs_mod
 
-    if omegas is None and external_freqs:
+    if omegas is None:
         if not sos.check_energy_conservation(all_freqs):
             raise ValueError("Energy conservation check was not passed. See above.")
 
@@ -439,6 +444,20 @@ def determine_rvecs(rvecs_dict_list, input_subs, adcc_prop,
             print(f"X_{{{lv}}} = X_{{{rv}}}") if lv != rv else print(f"X_{{{lv}}}")
 
     return rvecs_dict_tot, rvecs_solution, rvecs_mapping
+
+
+def process_complex_factor(sos, tensor):
+    factor = sos.complex_factor
+    print("\nTaking into account imaginary operators:")
+    if factor.imag == 0:
+        print("The real part of the property is returned.")
+        print(f"It was multiplied with a factor of {factor.real}.")
+        return factor.real * tensor
+    else:
+        assert factor.real == 0
+        print("The imaginary part of the property is returned.")
+        print(f"It was multiplied with a factor of {factor.imag}.")
+        return factor.imag * tensor
 
 
 def evaluate_property_isr(
@@ -737,6 +756,7 @@ def evaluate_property_isr(
             perms = list(permutations(c))  # if tensor is symmetric
             for pe in perms:
                 res_tens[pe] = res_tens[c]
+    res_tens = process_complex_factor(sos, res_tens)
     print("========== The requested tensor was formed. ==========")
     return res_tens
 
@@ -992,6 +1012,7 @@ def evaluate_property_sos(
                     perms = list(permutations(c))  # if tensor is symmetric
                     for pe in perms:
                         res_tens[pe] = res_tens[c]
+    res_tens = process_complex_factor(sos, res_tens)
     print("========== The requested tensor was formed. ==========")
     return res_tens
 
@@ -1297,5 +1318,6 @@ def evaluate_property_sos_fast(
         print(array_list[-1].shape)
         res_tens += factor * np.einsum(einsum_string, *array_list)
 
+    res_tens = process_complex_factor(sos, res_tens)
     print("========== The requested tensor was formed. ==========")
     return res_tens
